@@ -41,7 +41,7 @@ python3 csv2kvstore.py
 **WARNING**: This script will make minor configuration changes to Splunk if needed to match settings in the configuration file.
 
 #### Functionality
-If it doesn't already exist, the script will use the REST API to create a collection on the splunk server. Collections are normally defined in `colections.conf` at the location `$SPLUNK_HOME/etc/apps/SPLUNK_APP_WITH_COLLECTION/local/collections.conf`.
+If it doesn't already exist, the script will use the REST API to create a collection on the splunk server. Collections are normally defined in `collections.conf` at the location `$SPLUNK_HOME/etc/apps/SPLUNK_APP_WITH_COLLECTION/local/collections.conf`.
 
 The script will then define a stanza in `limits.conf` and set the `max_documents_per_batch_save ` value. The splunk application `limits.conf` is modified under, and the value set, are configured in the configuration file.
 
