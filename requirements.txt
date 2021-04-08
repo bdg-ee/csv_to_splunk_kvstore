@@ -1,0 +1,2 @@
+splunklib
+requests
