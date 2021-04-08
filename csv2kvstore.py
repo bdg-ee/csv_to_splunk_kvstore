@@ -52,6 +52,26 @@ def log(msg):
             print(msg)
 
 
+def log_error(msg):
+    log(f"script_action=error,msg={msg}")
+
+
+def log_failure(msg):
+    log(f"script_action=failed,msg={msg}")
+
+
+def log_warning(msg):
+    log(f"script_action=warning,msg={msg}")
+
+
+def log_info(msg):
+    log(f"script_action=info,msg={msg}")
+
+
+def log_success(msg):
+    log(f"script_action=success,msg={msg}")
+
+
 def get_fieldnames(filename):
     """Simply grabs fieldnames of csv"""
     data = []
@@ -69,11 +89,11 @@ def reload_splunk(pw):
         r = requests.post(_RELOAD_URL, auth=(splunk_user, pw),verify=False)
 
         if r.status_code == requests.codes.ok:
-            log(f"script_action=success,msg=reloaded {splunk_server}.")
+            log_success(f"reloaded {splunk_server}.")
         else:
-            log(f"script_action=failed,msg=failed reload of {splunk_server}, but no exceptions thrown.")
+            log_failure(f"failed reload of {splunk_server} but no exceptions thrown.")
     except Exception as e:
-        log(f"script_action=failed,msg=failed reload of {splunk_server}. {e}")
+        log_failure(f"failed reload of {splunk_server}. {e}")
 
 
 def read_and_postDataToSplunk(filename, collection):
@@ -85,7 +105,7 @@ def read_and_postDataToSplunk(filename, collection):
         last_time = start_time
         with open(filename,"r") as csvfile:
             csvReader = csv.DictReader(csvfile)
-            log(f"script_action=info,msg=input csv file {filename} opened successfully.")
+            log_info(f"input csv file {filename} opened successfully.")
             cnt = 0
             items = []
             for row in csvReader:
@@ -93,7 +113,7 @@ def read_and_postDataToSplunk(filename, collection):
                 items.append(row)
                 cnt += 1
 
-                #
+                # Check if we are at max chunk size and send if true
                 if cnt >= int(_MAX_DOCUMENTS_PER_BATCH_SAVE):
                     collection.data.batch_save(*items)
                     total_records += cnt
@@ -105,7 +125,7 @@ def read_and_postDataToSplunk(filename, collection):
                     # Check if we need to give a user update
                     if time.time()-last_time > _UPDATE_INTERVAL:
                         passed_time = time.time()-start_time
-                        log(f"script_action=processing,msg=at {passed_time:.1f} secs, {total_records} records pushed to kvstore {collection_name} on splunk server {splunk_server}.")
+                        log_info(f"still processing at {passed_time:.1f} secs with {total_records} records pushed to kvstore {collection_name} on splunk server {splunk_server}.")
                         last_time = time.time()
 
             # Send last set
@@ -114,10 +134,10 @@ def read_and_postDataToSplunk(filename, collection):
                 total_records += cnt
                 cnt=0
 
-        log(f"script_action=success,msg=pushed {total_records} records to kvstore {collection_name} on splunk server {splunk_server} in {time.time()-start_time:.1f} seconds.")
+        log_success(f"pushed {total_records} records to kvstore {collection_name} on splunk server {splunk_server} in {time.time()-start_time:.1f} seconds.")
 
     except Exception as e:
-        log(f"script_action=failed,msg=could not push data to splunk server {splunk_server}. Error occurred with {total_records} pushed. {e}")
+        log_failure(f"could not push data to splunk server {splunk_server}. Error occurred with {total_records} pushed. {e}")
 
 def removeDataFromSplunk(data):
     # TODO
@@ -136,22 +156,22 @@ if __name__ == "__main__":
             username=splunk_user,password=pw,app=splunk_app, owner=collection_owner,
             handler=connectionHandler)
         if refresh:
-            log(f"script_action=warning,msg=deleting the kvstore {collection_name} from {splunk_server} because DELETE_AND_REBUILD is set to True.")
+            log_warning(f"deleting the kvstore {collection_name} from {splunk_server} because DELETE_AND_REBUILD is set to True.")
             s.kvstore.delete(collection_name)
     
     except Exception as e:
-        log(f"script_action=error,msg=could not connect to splunk server {splunk_server}. {e}")
+        log_error(f"could not connect to splunk server {splunk_server}. {e}")
         sys.exit(2)
 
     # Check collection exists, and setting is correct for stanza in collections.conf
     # create/update collection as needed
     avail_collections = [collection.name for collection in s.kvstore]
     if collection_name not in avail_collections:
-        log(f"script_action=warning,msg=could not find collection {collection_name} on server {splunk_server} - trying to create...")
+        log_warning(f"could not find collection {collection_name} on server {splunk_server} - trying to create...")
         s.kvstore.create(collection_name)
-        log(f"script_action=success,msg=created collection {collection_name} on server {splunk_server}.")
+        log_success(f"created collection {collection_name} on server {splunk_server}.")
     else:
-        log(f"script_action=info,msg=verified collection {collection_name} on server {splunk_server}.")
+        log_info(f"verified collection {collection_name} on server {splunk_server}.")
 
     # Check setting in limits.conf is correct for max_documents_per_batch_save
     try:
@@ -163,7 +183,7 @@ if __name__ == "__main__":
             reload_splunk(pw)
             # Refresh the configuration
             conf.refresh()
-            log(f"script_action=success,msg=created kvstore stanza in limits.conf.")
+            log_success(f"created kvstore stanza in limits.conf.")
             
         # Confirm ky:value entry under stanza is accurate
         stanza = s.confs["limits"]["kvstore"]
@@ -174,15 +194,15 @@ if __name__ == "__main__":
                 stanza.submit({"max_documents_per_batch_save":_MAX_DOCUMENTS_PER_BATCH_SAVE})
                 stanza_key_exists = True
                 reload_needed = True
-                log(f"script_action=success,msg=set max_documents_per_batch_save to {_MAX_DOCUMENTS_PER_BATCH_SAVE}.")
+                log_success(f"set max_documents_per_batch_save to {_MAX_DOCUMENTS_PER_BATCH_SAVE}.")
         if not stanza_key_exists:
             stanza.submit({"max_documents_per_batch_save":_MAX_DOCUMENTS_PER_BATCH_SAVE})
         if reload_needed: reload_splunk(pw)
-        log(f"script_action=info,msg=verified limits.conf max_documents_per_batch_save value is {_MAX_DOCUMENTS_PER_BATCH_SAVE}.")
+        log_info(f"verified limits.conf max_documents_per_batch_save value is {_MAX_DOCUMENTS_PER_BATCH_SAVE}.")
     except Exception as e:
-        log(f"script_action=failed,msg=failed setting limits.conf max_documents_per_batch_save value to {_MAX_DOCUMENTS_PER_BATCH_SAVE}. {e}")
+        log_failure(f"failed setting limits.conf max_documents_per_batch_save value to {_MAX_DOCUMENTS_PER_BATCH_SAVE}. {e}")
  
-    log(f"script_action=processing,file={input_file},msg=pushing to splunk")
+    log_info(f"processing file {input_file} and pushing to splunk.")
     read_and_postDataToSplunk(input_file, s.kvstore[collection_name])
 
 # EOF
