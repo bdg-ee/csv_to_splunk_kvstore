@@ -3,11 +3,16 @@
 ---
 
 **TABLE OF CONTENTS**
+- [About](#about)
 - [Setup](#setup)
 - [Usage](#usage)
 - [References](#references)
 
 ---
+
+## About
+
+This script builds out a Splunk KVStore from a csv file. Inforamtion about Splunk KVStore - how it differs from a simple lookup and when and why to use it, is explained thoroughly in Splunk's documentation.
 
 ## Setup
 
@@ -38,7 +43,7 @@ If it doesn't already exist, the script will use the REST API to create a collec
 
 The script will then define a stanza in `limits.conf` and set the `max_documents_per_batch_save ` value. The splunk application `limits.conf` is modified under, and the value set, are configured in the configuration file.
 
-Finally, the script reads through the csv and pushes it in chunks to the splunk server using the REST API
+Finally, the script reads through the csv and pushes it in chunks to the splunk server using the REST API, building out the KVStore.
 
 #### Logging
 The script will write to the log file specified in the configuration (default is `csv2splunk.log`).
