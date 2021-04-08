@@ -21,7 +21,7 @@ try:
     import ssl
     from xml.etree import ElementTree
 except Exception as e:
-    print("Required Python Packags can't be loaded!")
+    print(f"Required Python Packages can't be loaded! {e}")
     sys.exit(2)
 
 # GLOBAL FIELDS
@@ -125,7 +125,7 @@ def removeDataFromSplunk(data):
 
 if __name__ == "__main__":
     
-    pw = input(f"Please enter password for user {splunk_user} and press <Enter>: ")
+    pw = input(f"Please enter password for user '{splunk_user}'' and press <Enter>: ")
 
     # Set timeout via connection handler
     connectionHandler = splunklib.binding.handler(timeout = 3)

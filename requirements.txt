@@ -1,2 +1,2 @@
-splunklib
+splunk-sdk
 requests
