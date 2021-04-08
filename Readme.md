@@ -64,7 +64,7 @@ To use the KV store, a lookup needs to be defined using it. This can be done thr
   ```
 To view the kvstore-based lookup, type the following into the Splunk searchbar:
   ```
-  | inputlookup LOOKUP_NAM
+  | inputlookup LOOKUP_NAME
   ```
 
 ## References:
