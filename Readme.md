@@ -69,4 +69,3 @@ To view the kvstore-based lookup, type the following into the Splunk searchbar:
 
 ## References:
 - [Splunklib](https://github.com/splunk/splunk-sdk-python/blob/master/examples/kvstore.py)
-"""
